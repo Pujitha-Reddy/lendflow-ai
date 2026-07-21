@@ -3,7 +3,7 @@
 # LendFlow AI
 
 **A backend-first loan processing platform.**
-Real underwriting rules, a tested decision engine, and an AI assistant that explains *why* - not a toy CRUD app.
+Real underwriting rules, a tested decision engine, and an AI assistant.
 
 [![Ruby](https://img.shields.io/badge/Ruby-3.3.6-CC342D?style=flat-square&logo=ruby&logoColor=white)](https://www.ruby-lang.org/)
 [![Rails](https://img.shields.io/badge/Rails-8.1-D30001?style=flat-square&logo=rubyonrails&logoColor=white)](https://rubyonrails.org/)
