@@ -1,0 +1,7 @@
+UNDERWRITING GUIDELINES
+
+LendFlow AI uses a hard-cutoff underwriting model rather than a weighted scoring model. This means each of the four criteria (credit score, debt-to-income, income, loan-to-income ratio) is evaluated as pass or fail, with no partial credit between criteria.
+
+This approach was chosen for transparency and auditability: every decision can be traced to a specific, named reason, which is important for regulatory compliance (adverse action notices) and for applicants to understand exactly why a decision was made.
+
+A future version of this system may move to a weighted risk-scoring model, where each factor contributes a numeric score toward an overall approval threshold. This would allow more nuanced decisions (e.g., excellent credit partially offsetting slightly high debt-to-income) but requires more careful calibration and is harder to explain to applicants.

@@ -1,0 +1,14 @@
+ LOAN APPROVAL POLICY
+
+LendFlow AI approves loans automatically based on four underwriting criteria:
+
+1. Credit Score: Applicant must have a credit score of 720 or higher.
+2. Debt-to-Income Ratio: Applicant's debt-to-income ratio must be 35% or lower.
+3. Annual Income: Applicant must have an annual income of at least $60,000.
+4. Loan Amount: The requested loan amount must not exceed 5 times the applicant's monthly income.
+
+If all four criteria are met, the loan is automatically approved.
+If exactly one criterion is not met, the application is sent to manual review.
+If two or more criteria are not met, the application is automatically rejected.
+
+Approved loans receive a base interest rate of 8.0%. Applicants with a credit score of 780 or higher receive a 1.0% discount. Applicants with a debt-to-income ratio above 25% receive a 1.5% surcharge.
