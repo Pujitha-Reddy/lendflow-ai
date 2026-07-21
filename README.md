@@ -3,7 +3,7 @@
 # LendFlow AI
 
 **A backend-first loan processing platform.**
-Real underwriting rules, a tested decision engine, and an AI assistant that explains *why* — not a toy CRUD app.
+Real underwriting rules, a tested decision engine, and an AI assistant that explains *why* - not a toy CRUD app.
 
 [![Ruby](https://img.shields.io/badge/Ruby-3.3.6-CC342D?style=flat-square&logo=ruby&logoColor=white)](https://www.ruby-lang.org/)
 [![Rails](https://img.shields.io/badge/Rails-8.1-D30001?style=flat-square&logo=rubyonrails&logoColor=white)](https://rubyonrails.org/)
@@ -13,7 +13,7 @@ Real underwriting rules, a tested decision engine, and an AI assistant that expl
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](#license)
 
 **[Live demo →](https://lendflow-ai.onrender.com)**
-*Free-tier hosting — the first request after a period of inactivity may take 10–30 seconds to wake up.*
+*Free-tier hosting - the first request after a period of inactivity may take 10-30 seconds to wake up.*
 
 </div>
 
@@ -37,17 +37,17 @@ Real underwriting rules, a tested decision engine, and an AI assistant that expl
 
 Loan underwriting is a good stress-test for backend fundamentals: it needs data you can trust, rules you can audit, and answers that hold up when someone asks *"why?"*
 
-LendFlow AI models that whole loop — onboarding, credit data, an automated decision, and a policy assistant that explains the outcome — using patterns that would hold up in a real production system:
+LendFlow AI models that whole loop onboarding, credit data, an automated decision, and a policy assistant that explains the outcome using patterns that would hold up in a real production system:
 
-- 🗃️ Relational modeling with **real constraints**, not just app-level validation
-- ⚖️ Business rules as a **standalone, tested service object** — not scattered across controllers
+- 🗃️ Relational modeling with **real constraints**, not just app level validation
+- ⚖️ Business rules as a **standalone, tested service object** not scattered across controllers
 - 🔌 Clean **RESTful API design**, nested where the domain is nested
 - 🧠 A genuine **retrieval-augmented generation** pipeline, grounded against hallucination
 - ✅ **Automated tests + CI** (lint, security scan, test suite) on every push
 
 ## Architecture
 
-A **modular monolith**, deliberately — not microservices. Each domain concern is cleanly separated into its own model and service object, which keeps the codebase simple to run today while leaving an obvious seam to split into independent services later, if scale ever demanded it.
+A **modular monolith**, deliberately not microservices. Each domain concern is cleanly separated into its own model and service object, which keeps the codebase simple to run today while leaving an obvious seam to split into independent services later, if scale ever demanded it.
 
 ```
                 Client
@@ -76,31 +76,31 @@ A **modular monolith**, deliberately — not microservices. Each domain concern 
 
 | Layer | Choice | Why |
 |---|---|---|
-| Framework | Rails 8, `--api` mode | No view layer needed — this is a backend service, consumable by any frontend |
-| Database | PostgreSQL | Real constraints, foreign keys, and precision-safe money types |
+| Framework | Rails 8, `--api` mode | No view layer needed, this is a backend service, consumable by any frontend |
+| Database | PostgreSQL | Real constraints, foreign keys, and precision safe money types |
 | Business logic | Plain Ruby service objects | Testable in isolation, no framework coupling |
-| AI inference | Groq (Llama 3.3 70B) | Free tier, fast inference, OpenAI-compatible API |
+| AI inference | Groq (Llama 3.3 70B) | Free tier, fast inference, OpenAI compatible API |
 | CI | GitHub Actions | Rubocop lint + Brakeman security scan + full test suite, on every push |
-| Hosting | Render | Free tier, zero-downtime deploys from `main` |
+| Hosting | Render | Free tier, zero downtime deploys from `main` |
 
 ## Database schema
 
 | Table | Purpose |
 |---|---|
 | `users` | Applicant identity and income data |
-| `credit_profiles` | One per user — credit score, debt-to-income ratio, bankruptcy history |
-| `loan_applications` | Belongs to a user — amount, purpose, term, status |
-| `loan_decisions` | One per application — decision, interest rate, and a human-readable reason |
+| `credit_profiles` | One per user - credit score, debt-to-income ratio, bankruptcy history |
+| `loan_applications` | Belongs to a user - amount, purpose, term, status |
+| `loan_decisions` | One per application - decision, interest rate, and a human readable reason |
 
 **Design choices worth noting:**
 
-- 💰 Money fields use `decimal` with explicit precision/scale, never floats — floats silently round in ways that matter for currency
-- 🔒 Uniqueness and foreign-key constraints are enforced **at the database level**, not just in application code — the database is the real source of truth
-- 📋 `loan_decisions.reason` is never blank — this mirrors a real regulatory requirement (adverse action notices): lenders must state *why* a loan was denied
+- 💰 Money fields use `decimal` with explicit precision/scale, never floats, floats silently round in ways that matter for currency
+- 🔒 Uniqueness and foreign-key constraints are enforced **at the database level**, not just in application code, the database is the real source of truth
+- 📋 `loan_decisions.reason` is never blank, this mirrors a real regulatory requirement (adverse action notices): lenders must state *why* a loan was denied
 
 ## The decision engine
 
-`LoanDecisionEngine` is a plain Ruby service object — not a model, not a controller — that evaluates an application against four underwriting rules:
+`LoanDecisionEngine` is a plain Ruby service object, not a model, not a controller, that evaluates an application against four underwriting rules:
 
 | Rule | Threshold |
 |---|---|
@@ -115,13 +115,13 @@ A **modular monolith**, deliberately — not microservices. Each domain concern 
    2+ fail     →  🔴 rejected
 ```
 
-Every decision returns a plain-language reason. This is a deliberate **hard-cutoff** model rather than a weighted score — simpler to build correctly and easier to audit, which matters more for a v1 lending system than nuance does. See [Roadmap](#roadmap) for where a scored model would fit later.
+Every decision returns a plain-language reason. This is a deliberate **hard-cutoff** model rather than a weighted score, simpler to build correctly and easier to audit, which matters more for a v1 lending system than nuance does. See [Roadmap](#roadmap) for where a scored model would fit later.
 
 ## The AI assistant
 
 A real, if right-sized, RAG pipeline:
 
-1. **Retrieve** — `PolicyRetriever` keyword-matches the question against a small set of policy documents (`loan_policy`, `faq`, `underwriting_guidelines`)
+1. **Retrieve** — `PolicyRetriever` keyword matches the question against a small set of policy documents (`loan_policy`, `faq`, `underwriting_guidelines`)
 2. **Ground** — the matched policy text is injected into the prompt, with explicit instructions not to invent applicant-specific facts it wasn't given
 3. **Generate** — `AiAssistantService` sends the grounded prompt to Groq (Llama 3.3 70B) and returns the answer alongside its sources
 
@@ -130,7 +130,6 @@ AiAssistantService.answer("Why was my loan rejected?")
 # => { answer: "...", sources: ["faq", "loan_policy"] }
 ```
 
-Worth knowing: an earlier version of this hallucinated applicant-specific details it was never given. The prompt was tightened to explicitly forbid that — a real grounding bug, caught and fixed, not a hypothetical one.
 
 ## API reference
 
@@ -188,7 +187,7 @@ bin/rails server
 
 Requires **Ruby 3.3.6+** and **PostgreSQL 14+**. Visit `http://localhost:3000` for the demo console, or hit the API directly.
 
-To use the AI assistant locally, add a Groq API key (free, no credit card — [console.groq.com](https://console.groq.com)) to your Rails credentials:
+To use the AI assistant locally, add a Groq API key (free, no credit card - [console.groq.com](https://console.groq.com)) to your Rails credentials:
 ```bash
 EDITOR="code --wait" bin/rails credentials:edit
 ```
