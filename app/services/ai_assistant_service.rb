@@ -1,8 +1,8 @@
 require "net/http"
 
 class AiAssistantService
-  OLLAMA_URL = "http://localhost:11434/api/generate"
-  MODEL = "llama3.2"
+  GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
+  MODEL = "llama-3.3-70b-versatile"
 
   def self.answer(question)
     documents = PolicyRetriever.relevant_documents(question)
@@ -16,23 +16,23 @@ class AiAssistantService
 
     context = documents.map { |doc| "### #{doc[:name].tr('_', ' ').upcase}\n#{doc[:content]}" }.join("\n\n")
 
-    prompt = <<~PROMPT
-  You are a helpful assistant for LendFlow AI, a loan processing company. Answer the applicant's question using ONLY the policy information below. Be concise and clear.
+    system_prompt = <<~SYSTEM
+      You are a helpful assistant for LendFlow AI, a loan processing company. Answer the applicant's question using ONLY the policy information provided. Be concise and clear.
 
-  IMPORTANT: You have NOT been given this specific applicant's data (credit score, income, etc.). Do not claim to know why THEIR specific application was approved or rejected. Instead, explain the general policy — what criteria matter and how decisions are made — and suggest they check their application's decision reason for their specific result.
+      IMPORTANT: You have NOT been given this specific applicant's data (credit score, income, etc.). Do not claim to know why THEIR specific application was approved or rejected. Instead, explain the general policy and, only if the question is about a personal decision, suggest they check their application's decision reason for their specific result.
 
-  If the policy information doesn't fully answer the question, say so honestly rather than guessing.
+      If the policy information doesn't fully answer the question, say so honestly rather than guessing.
+    SYSTEM
 
+    user_prompt = <<~USER
       POLICY INFORMATION:
       #{context}
 
       APPLICANT QUESTION:
       #{question}
+    USER
 
-      ANSWER:
-    PROMPT
-
-    response = call_ollama(prompt)
+    response = call_groq(system_prompt, user_prompt)
 
     {
       answer: response,
@@ -40,18 +40,34 @@ class AiAssistantService
     }
   end
 
-  def self.call_ollama(prompt)
-    uri = URI(OLLAMA_URL)
+  def self.call_groq(system_prompt, user_prompt)
+    uri = URI(GROQ_URL)
     http = Net::HTTP.new(uri.host, uri.port)
-    http.read_timeout = 60
+    http.use_ssl = true
+    http.read_timeout = 30
 
     request = Net::HTTP::Post.new(uri, "Content-Type" => "application/json")
-    request.body = { model: MODEL, prompt: prompt, stream: false }.to_json
+    request["Authorization"] = "Bearer #{Rails.application.credentials.groq_api_key}"
+    request.body = {
+      model: MODEL,
+      messages: [
+        { role: "system", content: system_prompt },
+        { role: "user", content: user_prompt }
+      ],
+      temperature: 0.3
+    }.to_json
 
     response = http.request(request)
-    JSON.parse(response.body)["response"]&.strip || "The assistant is currently unavailable."
+    parsed = JSON.parse(response.body)
+
+    if parsed["error"]
+      Rails.logger.error("Groq API error: #{parsed['error']}")
+      return "The assistant is currently unavailable. Please try again shortly."
+    end
+
+    parsed.dig("choices", 0, "message", "content")&.strip || "The assistant is currently unavailable."
   rescue => e
-    Rails.logger.error("Ollama call failed: #{e.message}")
+    Rails.logger.error("Groq call failed: #{e.message}")
     "The assistant is currently unavailable. Please try again shortly."
   end
 end
