@@ -42,13 +42,27 @@
 
   .layout{
     display:grid;
-    grid-template-columns:230px 1fr 380px;
+    grid-template-columns:230px 1fr;
     gap:0;
     min-height:calc(100vh - 78px);
+    transition:grid-template-columns .2s ease;
+  }
+  .layout.ledger-open{
+    grid-template-columns:230px 1fr 380px;
   }
   @media (max-width:980px){
-    .layout{grid-template-columns:1fr;}
+    .layout, .layout.ledger-open{grid-template-columns:1fr;}
   }
+  .ledger{display:none;}
+  .layout.ledger-open .ledger{display:flex;}
+
+  .ledger-toggle{
+    background:transparent;color:var(--muted);border:1px solid var(--line);
+    padding:8px 14px;font-size:0.78rem;font-family:'IBM Plex Mono',monospace;
+    letter-spacing:0.04em;text-transform:uppercase;
+  }
+  .ledger-toggle:hover{color:var(--paper);border-color:var(--gold);}
+  .ledger-toggle.active{color:var(--gold);border-color:var(--gold);}
 
   nav{
     border-right:1px solid var(--line);
@@ -183,11 +197,14 @@
 <body>
 
 <header>
-  <h1>LendFlow AI</h1>
-  <div class="tag">Underwriting Desk — internal demo console</div>
+  <div>
+    <h1>LendFlow AI</h1>
+    <div class="tag">No black box. Just a ledger.</div>
+  </div>
+  <button class="ledger-toggle" id="ledgerToggle">Show ledger</button>
 </header>
 
-<div class="layout">
+<div class="layout" id="layout">
   <nav id="nav"></nav>
   <main id="main"></main>
   <aside class="ledger">
@@ -466,6 +483,14 @@ function attachHandlers(key){
 }
 
 function val(id){ return document.getElementById(id).value; }
+
+document.getElementById('ledgerToggle').addEventListener('click', () => {
+  const layout = document.getElementById('layout');
+  const btn = document.getElementById('ledgerToggle');
+  const open = layout.classList.toggle('ledger-open');
+  btn.textContent = open ? 'Hide ledger' : 'Show ledger';
+  btn.classList.toggle('active', open);
+});
 
 render();
 </script>
