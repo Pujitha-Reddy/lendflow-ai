@@ -13,7 +13,7 @@ class LoanApplicationsController < ApplicationController
 
   def show
     loan_application = LoanApplication.find(params[:id])
-    render json: loan_application.as_json(include: [:user, :loan_decision])
+    render json: loan_application.as_json(include: [ :user, :loan_decision ])
   rescue ActiveRecord::RecordNotFound
     render json: { error: "Loan application not found" }, status: :not_found
   end

@@ -22,7 +22,7 @@ class AiAssistantService
   IMPORTANT: You have NOT been given this specific applicant's data (credit score, income, etc.). Do not claim to know why THEIR specific application was approved or rejected. Instead, explain the general policy — what criteria matter and how decisions are made — and suggest they check their application's decision reason for their specific result.
 
   If the policy information doesn't fully answer the question, say so honestly rather than guessing.
-  
+
       POLICY INFORMATION:
       #{context}
 
