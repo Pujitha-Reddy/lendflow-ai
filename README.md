@@ -1,3 +1,6 @@
+**Live demo:** https://lendflow-ai.onrender.com  
+*(Free-tier hosting — the first request after a period of inactivity may take 10–30 seconds to wake up.)*
+
 # LendFlow AI
 
 A backend-first loan processing platform built with Ruby on Rails. It models a real consumer lending workflow — from customer onboarding through automated underwriting decisions — with an AI-powered assistant that explains lending policy using retrieval-augmented generation.
@@ -66,7 +69,7 @@ This is intentionally a hard-cutoff rules engine rather than a scored/weighted m
 ## Setup
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/lendflow-ai.git
+git clone https://github.com/Pujitha-Reddy/lendflow-ai.git
 cd lendflow-ai
 bundle install
 bin/rails db:create db:migrate
