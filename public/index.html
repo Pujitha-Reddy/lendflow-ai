@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LendFlow AI — Underwriting Desk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#10151A;
+    --panel:#1B2229;
+    --panel-2:#212A32;
+    --line:#2C3641;
+    --paper:#E8E4D8;
+    --muted:#7C8590;
+    --gold:#C99A44;
+    --green:#5B8266;
+    --rust:#B14D3C;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--ink);
+    color:var(--paper);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+  }
+  ::selection{background:var(--gold);color:var(--ink);}
+  h1,h2,h3{font-family:'Fraunces',serif;font-weight:600;margin:0;letter-spacing:0.2px;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+
+  header{
+    padding:28px 40px 22px;
+    border-bottom:1px solid var(--line);
+    display:flex;align-items:baseline;justify-content:space-between;
+    flex-wrap:wrap;gap:8px;
+  }
+  header h1{font-size:1.5rem;}
+  header .tag{color:var(--muted);font-size:0.78rem;font-family:'IBM Plex Mono',monospace;letter-spacing:0.06em;text-transform:uppercase;}
+
+  .layout{
+    display:grid;
+    grid-template-columns:230px 1fr 380px;
+    gap:0;
+    min-height:calc(100vh - 78px);
+  }
+  @media (max-width:980px){
+    .layout{grid-template-columns:1fr;}
+  }
+
+  nav{
+    border-right:1px solid var(--line);
+    padding:28px 0;
+  }
+  .step{
+    display:flex;align-items:center;gap:14px;
+    padding:14px 28px;cursor:pointer;
+    border-left:2px solid transparent;
+    color:var(--muted);
+    transition:color .15s ease, border-color .15s ease, background .15s ease;
+  }
+  .step:hover{color:var(--paper);background:var(--panel);}
+  .step.active{
+    color:var(--paper);
+    border-left-color:var(--gold);
+    background:var(--panel);
+  }
+  .step .num{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:0.75rem;
+    width:22px;height:22px;
+    border:1px solid currentColor;
+    border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;
+  }
+  .step.done .num{background:var(--green);border-color:var(--green);color:var(--ink);}
+  .step .label{font-size:0.92rem;}
+
+  main{padding:36px 44px;overflow-y:auto;}
+  .panel-title{font-size:1.15rem;margin-bottom:4px;}
+  .panel-sub{color:var(--muted);font-size:0.86rem;margin-bottom:26px;}
+
+  .field{margin-bottom:16px;}
+  .field label{
+    display:block;font-size:0.76rem;color:var(--muted);
+    text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;
+  }
+  .field input, .field select, .field textarea{
+    width:100%;background:var(--panel-2);border:1px solid var(--line);
+    color:var(--paper);padding:10px 12px;border-radius:4px;
+    font-family:'IBM Plex Mono',monospace;font-size:0.92rem;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus{
+    outline:none;border-color:var(--gold);
+  }
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  @media (max-width:640px){.row{grid-template-columns:1fr;}}
+
+  button{
+    font-family:'Inter',sans-serif;font-weight:600;font-size:0.9rem;
+    background:var(--gold);color:var(--ink);border:none;
+    padding:11px 22px;border-radius:4px;cursor:pointer;
+    transition:filter .15s ease, transform .1s ease;
+  }
+  button:hover{filter:brightness(1.08);}
+  button:active{transform:translateY(1px);}
+  button:disabled{opacity:0.5;cursor:not-allowed;}
+  button.ghost{
+    background:transparent;color:var(--paper);border:1px solid var(--line);
+  }
+
+  .state-line{
+    display:flex;gap:10px;flex-wrap:wrap;margin-bottom:22px;
+  }
+  .chip{
+    font-family:'IBM Plex Mono',monospace;font-size:0.76rem;
+    padding:5px 10px;border-radius:3px;background:var(--panel-2);
+    border:1px solid var(--line);color:var(--muted);
+  }
+  .chip.set{color:var(--paper);border-color:var(--gold);}
+
+  .stamp{
+    display:inline-block;font-family:'Fraunces',serif;font-weight:600;
+    font-size:1.6rem;letter-spacing:0.04em;padding:14px 26px;
+    border:3px solid currentColor;border-radius:6px;
+    transform:rotate(-3deg);margin:18px 0;text-transform:uppercase;
+  }
+  .stamp.approved{color:var(--green);}
+  .stamp.rejected{color:var(--rust);}
+  .stamp.manual_review{color:var(--gold);}
+
+  .decision-detail{margin-top:18px;}
+  .decision-detail .row-line{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line);font-size:0.88rem;}
+  .decision-detail .row-line span:first-child{color:var(--muted);}
+
+  .chat-answer{
+    background:var(--panel-2);border:1px solid var(--line);border-radius:6px;
+    padding:16px;margin-top:14px;font-size:0.92rem;line-height:1.55;
+  }
+  .sources{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;}
+  .source-chip{
+    font-family:'IBM Plex Mono',monospace;font-size:0.7rem;
+    background:var(--ink);border:1px solid var(--green);color:var(--green);
+    padding:3px 8px;border-radius:3px;text-transform:uppercase;letter-spacing:0.04em;
+  }
+
+  /* Ledger */
+  .ledger{
+    border-left:1px solid var(--line);
+    display:flex;flex-direction:column;
+    background:#0C1013;
+  }
+  .ledger-head{
+    padding:20px 22px 14px;border-bottom:1px solid var(--line);
+  }
+  .ledger-head h2{font-size:1rem;}
+  .ledger-head .panel-sub{margin-bottom:0;font-size:0.78rem;}
+  .ledger-feed{
+    flex:1;overflow-y:auto;padding:16px 20px;
+    font-family:'IBM Plex Mono',monospace;font-size:0.76rem;line-height:1.5;
+  }
+  .entry{
+    margin-bottom:16px;padding-bottom:14px;border-bottom:1px dashed var(--line);
+    animation:print .25s ease;
+  }
+  @keyframes print{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:translateY(0);}}
+  .entry .req{color:var(--gold);}
+  .entry .status-ok{color:var(--green);}
+  .entry .status-err{color:var(--rust);}
+  .entry pre{
+    white-space:pre-wrap;word-break:break-word;color:var(--muted);
+    margin:6px 0 0;background:transparent;
+  }
+  .ledger-empty{color:var(--muted);font-size:0.8rem;padding:6px 0;}
+
+  .error-msg{color:var(--rust);font-size:0.84rem;margin-top:10px;}
+  .hint{color:var(--muted);font-size:0.8rem;margin-top:14px;line-height:1.5;}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>LendFlow AI</h1>
+  <div class="tag">Underwriting Desk — internal demo console</div>
+</header>
+
+<div class="layout">
+  <nav id="nav"></nav>
+  <main id="main"></main>
+  <aside class="ledger">
+    <div class="ledger-head">
+      <h2>The Ledger</h2>
+      <div class="panel-sub">Every request &amp; response, live</div>
+    </div>
+    <div class="ledger-feed" id="ledgerFeed">
+      <div class="ledger-empty">No entries yet. Actions on the left will print here.</div>
+    </div>
+  </aside>
+</div>
+
+<script>
+const API_BASE = ''; // same-origin: works locally and on the deployed app
+
+const state = {
+  step: 0,
+  userId: null,
+  loanApplicationId: null,
+};
+
+const steps = [
+  { key: 'applicant', label: 'Applicant' },
+  { key: 'credit', label: 'Credit Profile' },
+  { key: 'loan', label: 'Loan Application' },
+  { key: 'decision', label: 'Decision' },
+  { key: 'assistant', label: 'Ask the Assistant' },
+];
+
+function isDone(key){
+  if (key === 'applicant') return !!state.userId;
+  if (key === 'credit') return state.creditDone;
+  if (key === 'loan') return !!state.loanApplicationId;
+  if (key === 'decision') return state.decisionDone;
+  return false;
+}
+
+function renderNav(){
+  const nav = document.getElementById('nav');
+  nav.innerHTML = steps.map((s, i) => `
+    <div class="step ${i === state.step ? 'active' : ''} ${isDone(s.key) ? 'done' : ''}" data-step="${i}">
+      <div class="num">${i + 1}</div>
+      <div class="label">${s.label}</div>
+    </div>
+  `).join('');
+  [...nav.querySelectorAll('.step')].forEach(el => {
+    el.addEventListener('click', () => { state.step = parseInt(el.dataset.step); render(); });
+  });
+}
+
+function stateChips(){
+  return `
+    <div class="state-line">
+      <div class="chip ${state.userId ? 'set' : ''}">user_id: ${state.userId ?? '—'}</div>
+      <div class="chip ${state.loanApplicationId ? 'set' : ''}">loan_application_id: ${state.loanApplicationId ?? '—'}</div>
+    </div>
+  `;
+}
+
+async function apiCall(method, path, body){
+  const opts = { method, headers: { 'Content-Type': 'application/json' } };
+  if (body) opts.body = JSON.stringify(body);
+  logRequest(method, path, body);
+  try {
+    const res = await fetch(API_BASE + path, opts);
+    const json = await res.json().catch(() => ({}));
+    logResponse(res.status, json);
+    return { ok: res.ok, status: res.status, json };
+  } catch (e) {
+    logResponse(0, { error: e.message });
+    return { ok: false, status: 0, json: { error: e.message } };
+  }
+}
+
+function logRequest(method, path, body){
+  const feed = document.getElementById('ledgerFeed');
+  if (feed.querySelector('.ledger-empty')) feed.innerHTML = '';
+  const entry = document.createElement('div');
+  entry.className = 'entry';
+  entry.innerHTML = `<div class="req">→ ${method} ${path}</div>${body ? `<pre>${escapeHtml(JSON.stringify(body, null, 2))}</pre>` : ''}`;
+  feed.prepend(entry);
+  entry.dataset.pending = 'true';
+  window._lastEntry = entry;
+}
+
+function logResponse(status, json){
+  const entry = window._lastEntry;
+  if (!entry) return;
+  const statusEl = document.createElement('div');
+  const ok = status >= 200 && status < 300;
+  statusEl.innerHTML = `<span class="${ok ? 'status-ok' : 'status-err'}">← ${status || 'ERR'}</span><pre>${escapeHtml(JSON.stringify(json, null, 2))}</pre>`;
+  entry.appendChild(statusEl);
+}
+
+function escapeHtml(str){
+  return str.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+function render(){
+  renderNav();
+  const key = steps[state.step].key;
+  const main = document.getElementById('main');
+  if (key === 'applicant') main.innerHTML = applicantView();
+  if (key === 'credit') main.innerHTML = creditView();
+  if (key === 'loan') main.innerHTML = loanView();
+  if (key === 'decision') main.innerHTML = decisionView();
+  if (key === 'assistant') main.innerHTML = assistantView();
+  attachHandlers(key);
+}
+
+function applicantView(){
+  return `
+    ${stateChips()}
+    <div class="panel-title">1 — Applicant</div>
+    <div class="panel-sub">Create a user record to begin the underwriting file.</div>
+    <div class="row">
+      <div class="field"><label>First name</label><input id="first_name" value="Jane"></div>
+      <div class="field"><label>Last name</label><input id="last_name" value="Doe"></div>
+    </div>
+    <div class="field"><label>Email</label><input id="email" value="jane.doe+${Date.now()}@example.com"></div>
+    <div class="row">
+      <div class="field"><label>Annual income (USD)</label><input id="income" type="number" value="85000"></div>
+      <div class="field"><label>Employment status</label>
+        <select id="employment_status">
+          <option value="employed">employed</option>
+          <option value="self_employed">self_employed</option>
+          <option value="unemployed">unemployed</option>
+          <option value="retired">retired</option>
+        </select>
+      </div>
+    </div>
+    <button id="submitApplicant">Create applicant</button>
+    <div id="applicantError" class="error-msg"></div>
+  `;
+}
+
+function creditView(){
+  return `
+    ${stateChips()}
+    <div class="panel-title">2 — Credit Profile</div>
+    <div class="panel-sub">${state.userId ? 'Attach credit data to user #' + state.userId + '.' : 'Create an applicant first (step 1).'}</div>
+    <div class="row">
+      <div class="field"><label>Credit score</label><input id="credit_score" type="number" value="760"></div>
+      <div class="field"><label>Debt-to-income (0–1)</label><input id="dti" type="number" step="0.01" value="0.22"></div>
+    </div>
+    <div class="field"><label>Bankruptcies</label><input id="bankruptcies" type="number" value="0"></div>
+    <button id="submitCredit" ${state.userId ? '' : 'disabled'}>Attach credit profile</button>
+    <div id="creditError" class="error-msg"></div>
+  `;
+}
+
+function loanView(){
+  return `
+    ${stateChips()}
+    <div class="panel-title">3 — Loan Application</div>
+    <div class="panel-sub">${state.userId ? 'Submit a loan request for user #' + state.userId + '.' : 'Create an applicant first (step 1).'}</div>
+    <div class="row">
+      <div class="field"><label>Amount (USD)</label><input id="amount" type="number" value="12000"></div>
+      <div class="field"><label>Term (months)</label><input id="term_months" type="number" value="24"></div>
+    </div>
+    <div class="field"><label>Purpose</label><input id="purpose" value="home_improvement"></div>
+    <button id="submitLoan" ${state.userId ? '' : 'disabled'}>Submit application</button>
+    <div id="loanError" class="error-msg"></div>
+  `;
+}
+
+function decisionView(){
+  return `
+    ${stateChips()}
+    <div class="panel-title">4 — Decision</div>
+    <div class="panel-sub">${state.loanApplicationId ? 'Run the underwriting engine on application #' + state.loanApplicationId + '.' : 'Submit a loan application first (step 3).'}</div>
+    <button id="runDecision" ${state.loanApplicationId ? '' : 'disabled'}>Run decision engine</button>
+    <div id="decisionResult"></div>
+    <div id="decisionError" class="error-msg"></div>
+  `;
+}
+
+function assistantView(){
+  return `
+    ${stateChips()}
+    <div class="panel-title">5 — Ask the Assistant</div>
+    <div class="panel-sub">Grounded Q&amp;A over LendFlow's policy documents (RAG, via Groq).</div>
+    <div class="field"><label>Question</label>
+      <textarea id="question" rows="3">Why was my loan rejected?</textarea>
+    </div>
+    <button id="askAssistant">Ask</button>
+    <div id="assistantResult"></div>
+    <div class="hint">Try: "What documents are required?" · "How is my interest rate determined?" · "Can I refinance?"</div>
+  `;
+}
+
+function attachHandlers(key){
+  if (key === 'applicant'){
+    document.getElementById('submitApplicant').addEventListener('click', async () => {
+      const body = {
+        user: {
+          first_name: val('first_name'), last_name: val('last_name'), email: val('email'),
+          income: Number(val('income')), employment_status: val('employment_status'),
+        }
+      };
+      const { ok, json } = await apiCall('POST', '/users', body);
+      const errEl = document.getElementById('applicantError');
+      if (ok){
+        state.userId = json.id;
+        errEl.textContent = '';
+        state.step = 1;
+        render();
+      } else {
+        errEl.textContent = (json.errors || [json.error] || ['Something went wrong']).join(', ');
+      }
+    });
+  }
+  if (key === 'credit'){
+    const btn = document.getElementById('submitCredit');
+    if (btn) btn.addEventListener('click', async () => {
+      const body = { credit_profile: { credit_score: Number(val('credit_score')), debt_to_income: Number(val('dti')), bankruptcies: Number(val('bankruptcies')) } };
+      const { ok, json } = await apiCall('POST', `/users/${state.userId}/credit_profile`, body);
+      const errEl = document.getElementById('creditError');
+      if (ok){ state.creditDone = true; errEl.textContent=''; state.step = 2; render(); }
+      else { errEl.textContent = (json.errors || [json.error] || ['Something went wrong']).join(', '); }
+    });
+  }
+  if (key === 'loan'){
+    const btn = document.getElementById('submitLoan');
+    if (btn) btn.addEventListener('click', async () => {
+      const body = { loan_application: { user_id: state.userId, amount: Number(val('amount')), purpose: val('purpose'), term_months: Number(val('term_months')) } };
+      const { ok, json } = await apiCall('POST', '/loan_applications', body);
+      const errEl = document.getElementById('loanError');
+      if (ok){ state.loanApplicationId = json.id; errEl.textContent=''; state.step = 3; render(); }
+      else { errEl.textContent = (json.errors || [json.error] || ['Something went wrong']).join(', '); }
+    });
+  }
+  if (key === 'decision'){
+    const btn = document.getElementById('runDecision');
+    if (btn) btn.addEventListener('click', async () => {
+      btn.disabled = true; btn.textContent = 'Running…';
+      const { ok, json } = await apiCall('POST', `/loan_applications/${state.loanApplicationId}/decision`);
+      btn.disabled = false; btn.textContent = 'Run decision engine';
+      const resultEl = document.getElementById('decisionResult');
+      const errEl = document.getElementById('decisionError');
+      if (ok){
+        state.decisionDone = true;
+        errEl.textContent = '';
+        resultEl.innerHTML = `
+          <div class="stamp ${json.decision}">${json.decision.replace('_',' ')}</div>
+          <div class="decision-detail">
+            <div class="row-line"><span>Interest rate</span><span class="mono">${json.interest_rate ?? '—'}${json.interest_rate ? '%' : ''}</span></div>
+            <div class="row-line"><span>Reason</span><span class="mono" style="text-align:right;max-width:60%;">${json.reason}</span></div>
+          </div>
+        `;
+      } else {
+        errEl.textContent = json.error || 'Something went wrong';
+      }
+    });
+  }
+  if (key === 'assistant'){
+    document.getElementById('askAssistant').addEventListener('click', async () => {
+      const btn = document.getElementById('askAssistant');
+      btn.disabled = true; btn.textContent = 'Thinking…';
+      const { ok, json } = await apiCall('POST', '/ai/chat', { question: val('question') });
+      btn.disabled = false; btn.textContent = 'Ask';
+      const resultEl = document.getElementById('assistantResult');
+      if (ok){
+        resultEl.innerHTML = `
+          <div class="chat-answer">
+            ${escapeHtml(json.answer || '')}
+            <div class="sources">${(json.sources || []).map(s => `<span class="source-chip">${s.replace('_',' ')}</span>`).join('')}</div>
+          </div>
+        `;
+      } else {
+        resultEl.innerHTML = `<div class="error-msg">${json.error || 'Something went wrong'}</div>`;
+      }
+    });
+  }
+}
+
+function val(id){ return document.getElementById(id).value; }
+
+render();
+</script>
+</body>
+</html>
